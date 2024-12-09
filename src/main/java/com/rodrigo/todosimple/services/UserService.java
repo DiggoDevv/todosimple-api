@@ -29,7 +29,6 @@ public class UserService {
     public User create(User obj) {
         obj.setId((null));
         obj = this.userRepository.save(obj);
-        this.taskRepository.saveAll(obj.getTasks());
         return obj;
     }
 
