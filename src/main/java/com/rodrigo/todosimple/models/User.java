@@ -1,5 +1,6 @@
 package com.rodrigo.todosimple.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import javax.persistence.*;
@@ -76,6 +77,9 @@ public class User {
     public void setPassword(String password) {
         this.password = password;
     }
+
+    //para não retornar todas as task
+    @JsonIgnore
     public List<Task> getTasks() {
         return tasks;
     }
