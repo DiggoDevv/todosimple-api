@@ -2,6 +2,8 @@ package com.rodrigo.todosimple.configs;
 
 import java.util.Arrays;
 
+import com.rodrigo.todosimple.security.JWTAuthenticationFilter;
+import com.rodrigo.todosimple.security.JWTUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,6 +30,9 @@ public class SecurityConfig {
     @Autowired
     private UserDetailsService userDetailsService;
 
+    @Autowired
+    private JWTUtil jwtUtil;
+
     private static final String[] PUBLIC_MATCHERS = {
             "/"
     };
@@ -47,7 +52,10 @@ public class SecurityConfig {
         http.authorizeRequests()
                 .antMatchers(HttpMethod.POST, PUBLIC_MATCHERS_POST).permitAll()
                 .antMatchers(PUBLIC_MATCHERS).permitAll()
-                .anyRequest().authenticated();
+                .anyRequest().authenticated().and().authenticationManager(authenticationManager);
+
+        http.addFilter(new JWTAuthenticationFilter(this.authenticationManager, this.jwtUtil));
+
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         return http.build();
     }
