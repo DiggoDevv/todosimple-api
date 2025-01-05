@@ -1,5 +1,6 @@
 package com.rodrigo.todosimple.security;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -13,7 +14,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rodrigo.todosimple.exceptions.GlobalExceptionHandler;
 import com.rodrigo.todosimple.models.User;
-import io.jsonwebtoken.io.IOException;
 
 public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     private AuthenticationManager authenticationManager;
@@ -32,8 +32,8 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                     userCredentials.getUsername(), userCredentials.getPassword(), new ArrayList<>());
             Authentication authentication = this.authenticationManager.authenticate(authToken);
             return authentication;
-        } catch (Exception e) {
-            throw new RuntimeException();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
     @Override
