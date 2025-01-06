@@ -5,14 +5,17 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.ConstraintViolationException;
 
+import com.rodrigo.todosimple.services.exceptions.AuthorizationException;
 import com.rodrigo.todosimple.services.exceptions.DataBindingViolationException;
 import com.rodrigo.todosimple.services.exceptions.ObjectNotFoundException;
+
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.validation.FieldError;
@@ -29,8 +32,8 @@ import java.io.IOException;
 
 @Slf4j(topic = "GLOBAL_EXCEPTION_HANDLER")
 @RestControllerAdvice
-//classe para capturar as exceções
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler implements AuthenticationFailureHandler {
+
     @Value("${server.error.include-exception}")
     private boolean printStackTrace;
 
@@ -50,7 +53,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler imple
         return ResponseEntity.unprocessableEntity().body(errorResponse);
     }
 
-    //se gerar uma exceção não tratada (error 500)
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseEntity<Object> handleAllUncaughtException(
@@ -66,7 +68,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler imple
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
-    @ResponseStatus(HttpStatus.CONFLICT) //conflict = 409
+    @ResponseStatus(HttpStatus.CONFLICT)
     public ResponseEntity<Object> handleDataIntegrityViolationException(
             DataIntegrityViolationException dataIntegrityViolationException,
             WebRequest request) {
@@ -80,7 +82,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler imple
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
-    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY) //error 422
+    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
     public ResponseEntity<Object> handleConstraintViolationException(
             ConstraintViolationException constraintViolationException,
             WebRequest request) {
@@ -92,7 +94,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler imple
     }
 
     @ExceptionHandler(ObjectNotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND) //error 404
+    @ResponseStatus(HttpStatus.NOT_FOUND)
     public ResponseEntity<Object> handleObjectNotFoundException(
             ObjectNotFoundException objectNotFoundException,
             WebRequest request) {
@@ -104,7 +106,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler imple
     }
 
     @ExceptionHandler(DataBindingViolationException.class)
-    @ResponseStatus(HttpStatus.CONFLICT) //error 409
+    @ResponseStatus(HttpStatus.CONFLICT)
     public ResponseEntity<Object> handleDataBindingViolationException(
             DataBindingViolationException dataBindingViolationException,
             WebRequest request) {
@@ -112,6 +114,42 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler imple
         return buildErrorResponse(
                 dataBindingViolationException,
                 HttpStatus.CONFLICT,
+                request);
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ResponseEntity<Object> handleAuthenticationException(
+            AuthenticationException authenticationException,
+            WebRequest request) {
+        log.error("Authentication error ", authenticationException);
+        return buildErrorResponse(
+                authenticationException,
+                HttpStatus.UNAUTHORIZED,
+                request);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ResponseEntity<Object> handleAccessDeniedException(
+            AccessDeniedException accessDeniedException,
+            WebRequest request) {
+        log.error("Authorization error ", accessDeniedException);
+        return buildErrorResponse(
+                accessDeniedException,
+                HttpStatus.FORBIDDEN,
+                request);
+    }
+
+    @ExceptionHandler(AuthorizationException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ResponseEntity<Object> handleAuthorizationException(
+            AuthorizationException authorizationException,
+            WebRequest request) {
+        log.error("Authorization error ", authorizationException);
+        return buildErrorResponse(
+                authorizationException,
+                HttpStatus.FORBIDDEN,
                 request);
     }
 
@@ -135,11 +173,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler imple
     }
 
     @Override
-    public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
+    public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
+                                        AuthenticationException exception) throws IOException, ServletException {
         Integer status = HttpStatus.UNAUTHORIZED.value();
         response.setStatus(status);
         response.setContentType("application/json");
-        ErrorResponse errorResponse = new ErrorResponse(status, "Email ou senha inválida");
+        ErrorResponse errorResponse = new ErrorResponse(status, "Email ou senha inválidos.");
         response.getWriter().append(errorResponse.toJson());
     }
+
 }
