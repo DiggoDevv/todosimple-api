@@ -1,6 +1,7 @@
 package com.rodrigo.todosimple.controllers;
 
 import com.rodrigo.todosimple.models.Task;
+import com.rodrigo.todosimple.models.projection.TaskProjection;
 import com.rodrigo.todosimple.services.TaskService;
 import com.rodrigo.todosimple.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,8 +32,8 @@ public class TaskController {
     }
 
     @GetMapping("/user")
-    public ResponseEntity<List<Task>> findAllByUser(){
-        List<Task> objs = this.taskService.findAllByUser();
+    public ResponseEntity<List<TaskProjection>> findAllByUser(){
+        List<TaskProjection> objs = this.taskService.findAllByUser();
         return ResponseEntity.ok().body(objs);
     }
 
